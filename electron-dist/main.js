@@ -11,5 +11,6 @@ function createWindow() {
         }
     });
     win.loadURL('http://localhost:5173');
+    win.setFullScreen(true);
 }
 electron_1.app.whenReady().then(createWindow);

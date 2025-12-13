@@ -26,7 +26,7 @@
         // Simple authentication logic (for demonstration purposes only)
         if (username === 'admin' && password === 'password') {
             localStorage.setItem('user', username);
-            router.push('/dashboard');
+            router.push({ name : 'dashboard' });
         } else {
             alert('Invalid credentials');
         }

@@ -4,5 +4,7 @@
   body {
     font-family: 'Poppins', sans-serif;
   }
+  .active {
+    background-color: #ce92ff;
+  }
 }
-    

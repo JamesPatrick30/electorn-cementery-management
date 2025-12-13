@@ -1,19 +1,32 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
-import Home from '../views/login.vue';
-import dashboard from '../views/app/dashboard.vue';
-// import About from '../views/About.vue';
+import login from '../views/login.vue';
+import home from '../views/app/Home.vue';
 
+import map from '../views/app/childer/map.vue';
+import Dashboard from '../views/app/childer/Dashboard.vue';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'login',
+    component: login
   },
   {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: dashboard
+    path: '/home',
+    name: 'home',
+    component: home,
+    children: [
+      {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: Dashboard
+      },
+      {
+        path: 'map',
+        name: 'map',
+        component: map
+      }
+    ]
   },
   // {
   //   path: '/about',
