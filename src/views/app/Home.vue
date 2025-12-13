@@ -12,8 +12,8 @@
                 
             </nav>
             <div class=" bg-gray-50 h-full w-full">
-                <header class="w-full h-9 bg-white text-left flex items-center">
-                    <h2 class=" font-bold ">Cementery Management Dashboard</h2>
+                <header class="w-full h-9 bg-white text-left flex items-center p-5">
+                    <p class=" font-medium">Welcome, {{ user }}</p>
                 </header>
                 <RouterView />
                 <!-- Dashboard content goes here -->
