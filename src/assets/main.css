@@ -7,4 +7,7 @@
   .active {
     background-color: #ce92ff;
   }
+  .card{
+    @apply h-25 hover:scale-105 transition-all duration-300;
+  }
 }
