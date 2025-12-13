@@ -1,3 +1,3 @@
 <template>
-    <h1>Map</h1>
+    <img src="../../../img/cementerylayout.jpg" alt="">
 </template>
