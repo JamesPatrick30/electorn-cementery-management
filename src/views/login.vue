@@ -30,19 +30,7 @@
     const message = ref('');
     const credentialsValid: Ref<boolean> = ref(false);
 
-    function handleLogin() {
-        // Simple authentication logic (for demonstration purposes only)
-        if (username.value === 'admin' && password.value === 'password') {
-            localStorage.setItem('user', username.value);
-            router.push({ name : 'dashboard' });
-        } else {
-            credentialsValid.value = true;
-            setTimeout(() => {
-                credentialsValid.value = false;
-            }, 3000);
-            // alert('Invalid credentials');
-        }
-    };
+    
     const loginUser = async () => {
         try {
             message.value = await AuthService.login(username.value, password.value);

@@ -1,7 +1,7 @@
 import { db } from "../firebaseConfig";
 import { 
   collection, doc, getDocs, query, where, 
-  updateDoc, deleteDoc, setDoc, collectionGroup 
+  updateDoc, deleteDoc, setDoc 
 } from "firebase/firestore";
 import type { Deceased } from "../types/Cemetery";
 

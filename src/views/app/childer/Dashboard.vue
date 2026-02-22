@@ -80,8 +80,6 @@
     import { ReserveService } from '../../../utils/ReserveService';
 
     const props = defineProps<{ plotId: string }>();
-const summary = ref({ totalPaid: 0, latestDueDate: null as Date | null });
-const history = ref([]);
 import type { Reservation } from '../../../types/Reservation'; // Import your interface
 
 // 1. Tell the ref it is an array of Reservations
@@ -92,12 +90,6 @@ onMounted(async () => {
   console.log(reservations.value);
 });
 
-const confirmPurge = async (plotId: string) => {
-  if(confirm(`Are you sure you want to PURGE all data for ${plotId}? This cannot be undone.`)) {
-    await ReserveService.purgePlotData(plotId);
-    reservations.value = reservations.value.filter(r => r.plotId !== plotId);
-  }
-};
     let alerts: Ref<Array<string>> = ref([
         "System maintenance scheduled for June 15th.",
         "New plot types available for reservation.",

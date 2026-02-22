@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Ref } from 'vue';
-import type { Reservation, ReservationPlotStatus } from '../../../types/Reservation'; // Import your interface
+import type { Reservation } from '../../../types/Reservation'; // Import your interface
 import { ReserveService } from '../../../utils/ReserveService';
 
 // 1. Tell the ref it is an array of Reservations

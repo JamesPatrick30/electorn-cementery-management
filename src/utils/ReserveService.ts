@@ -1,7 +1,7 @@
 import { db } from "../firebaseConfig";
 import { 
   collection, doc, setDoc, getDoc, getDocs, 
-  query, where, writeBatch, limit, Timestamp 
+  query, where, writeBatch, Timestamp 
 } from "firebase/firestore";
 import { PaymentService } from "./PaymentService"; // Replaces paymentAdaptor
 import type { Reservation } from "../types/Reservation";
