@@ -5,24 +5,24 @@
                 <div class="card bg-[#DEF1FF] flex justify-between items-center shadow-md rounded-lg p-5 w-1/3 mx-2">
                     <h2 class="text-md lg:text-lg font-semibold mb-3">Available <br>
                             Plots</h2>
-                    <p class=" text-3xl font-bold text-[#0095FF]">150</p>
+                    <p class=" text-3xl font-bold text-[#0095FF]">{{ 43 - reservations.length }}</p>
                 </div>
                 <div class="card bg-[#FAFFAF] flex justify-between items-center shadow-md rounded-lg p-5 w-1/3 mx-2">
                     <h2 class="text-md lg:text-lg font-semibold mb-3">Reserved <br>
                             Plots</h2>
-                    <p class=" text-3xl font-bold text-[#899300]">90</p>
+                    <p class=" text-3xl font-bold text-[#899300]">{{ reservations.filter(r => r.plotStatus === 'Reserved').length }}</p>
                 </div>
                 <div class="card bg-[#D9FFE3] flex justify-between items-center shadow-md rounded-lg p-5 w-1/3 mx-2">
                     <h2 class="text-md lg:text-lg font-semibold mb-3">Occupied <br>
                             </h2>
-                    <p class=" text-3xl font-bold text-[#00D83A]">60</p>
+                    <p class=" text-3xl font-bold text-[#00D83A]">{{ reservations.filter(r => r.plotStatus === 'Occupied').length }}</p>
                 </div>
             </div>
         </section>
         <section class="w-full flex justify-center items-center" id="Reservations" role="Reservations">
             <div class="w-[90%] bg-white mt-10 p-5 shadow-md rounded-lg">
-                <h2 class=" text-xl font-bold mb-5">Recent Reservations</h2>
-                <table class=" w-full table-auto">
+                <h2 class=" text-xl font-bold mb-5">Plots</h2>
+                <table class=" w-full table-auto  overflow-auto max-h-1 scrollbar-thin scrollbar-thumb-gray-300">
                     <thead>
                         <tr class=" bg-gray-200">
                             <th class=" p-3 text-left">Name</th>
@@ -31,19 +31,16 @@
                             <th class=" p-3 text-left">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr class=" border-b">
-                            <td class=" p-3">John Doe</td>
-                            <td class=" p-3">A-101</td>
-                            <td class=" p-3">2024-06-01</td>
-                            <td class=" p-3">Reserved</td>
-                        </tr>
-                        <tr class=" border-b">
-                            <td class=" p-3">Jane Smith</td>
-                            <td class=" p-3">B-202</td>
-                            <td class=" p-3">2024-06-03</td>
-                            <td class=" p-3">Occupied</td> 
-                        </tr>
+                    <tbody class=" overflow-hidden max-h-1 scrollbar-thin scrollbar-thumb-gray-300">
+                        <template v-for="reservation in reservations" :key="reservation.plotId">
+                            <tr class=" border-b">
+                                <td class=" p-3">{{ reservation.username }}</td>
+                                <td class=" p-3">{{ reservation.plotId }}</td>
+                            <td class=" p-3">{{ reservation.created_at.toDate().toISOString().split('T')[0] }}</td>
+                            <td class=" p-3">{{ reservation.plotStatus }}</td>
+                            </tr>
+                        </template>
+                        
                     </tbody>
                 </table>
 
@@ -78,9 +75,29 @@
 </template>
 <script setup lang="ts">
     // import { onMounted } from 'vue';
-    import { ref } from 'vue';
+    import { ref, onMounted } from 'vue';
     import type { Ref } from 'vue';
+    import { ReserveService } from '../../../utils/ReserveService';
 
+    const props = defineProps<{ plotId: string }>();
+const summary = ref({ totalPaid: 0, latestDueDate: null as Date | null });
+const history = ref([]);
+import type { Reservation } from '../../../types/Reservation'; // Import your interface
+
+// 1. Tell the ref it is an array of Reservations
+const reservations = ref<Reservation[]>([]);
+
+onMounted(async () => {
+  reservations.value = await ReserveService.getAllReservations();
+  console.log(reservations.value);
+});
+
+const confirmPurge = async (plotId: string) => {
+  if(confirm(`Are you sure you want to PURGE all data for ${plotId}? This cannot be undone.`)) {
+    await ReserveService.purgePlotData(plotId);
+    reservations.value = reservations.value.filter(r => r.plotId !== plotId);
+  }
+};
     let alerts: Ref<Array<string>> = ref([
         "System maintenance scheduled for June 15th.",
         "New plot types available for reservation.",
