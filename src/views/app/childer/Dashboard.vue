@@ -86,6 +86,7 @@ import type { Reservation } from '../../../types/Reservation'; // Import your in
 const reservations = ref<Reservation[]>([]);
 
 onMounted(async () => {
+    await ReserveService.checkAndAutoOccupy();
   reservations.value = await ReserveService.getAllReservations();
   console.log(reservations.value);
 });

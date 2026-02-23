@@ -5,7 +5,7 @@ export interface Reservation {
   username: string;
   contact: string;
   scheduledDate: string;
-  plotType: string;
+  plotType: 'monastery' | 'single';
   created_at: Timestamp;
   plotStatus: 'Reserved' | 'Occupied' | 'Available';
   price: number;

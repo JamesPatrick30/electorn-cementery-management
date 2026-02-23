@@ -10,4 +10,10 @@
   .card{
     @apply h-25 hover:scale-105 transition-all duration-300;
   }
+  .plot{
+    @apply w-30 h-10 rounded-md shadow-md text-center py-2 hover:scale-105 transition-all duration-300 cursor-pointer;
+  }
+  .bigplot{
+    @apply w-90 h-30 rounded-md shadow-md text-center py-2 hover:scale-105 transition-all duration-300 cursor-pointer;
+  }
 }
