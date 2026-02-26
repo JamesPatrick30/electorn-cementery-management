@@ -28,10 +28,33 @@
         </div>
        
      </div>
-    <div class=" absolute z-100 w-full h-full top-0 left-0 flex items-center justify-center graybackground" id="overlay" v-show="paymentHistorySwitch">
+     <div class=" absolute z-100 w-full h-full top-0 left-0 flex items-center justify-center graybackground" id="overlay" v-show="paymentHistorySwitch">
         <div class="p-5 w-100 bg-white rounded-md shadow-md opacity-100">
-            <h3 class=" font-bold text-2xl">Payment
-            </h3>
+            <h3 class="font-bold">Payment History</h3>
+            <hr>
+            <p>Payment: ₱{{ billsMonthly?.monthlyAmount ? (billsMonthly
+.monthlyAmount).toFixed(2) : '0.00' }}</p>
+            <p>Total Paid: <span class=" font-bold">₱{{ paymentInfo?.totalPaid || 0 }}</span></p>
+            <p>Balance: <span class=" font-bold">₱{{ reservedInfo && paymentInfo ? (reservedInfo.price - paymentInfo.totalPaid).toFixed(2) : '0.00' }}</span></p>
+            <p>Latest Due Date: <span class=" font-bold">{{ paymentInfo?.latestDueDate ? new Date(paymentInfo.latestDueDate).toLocaleDateString() : 'N/A' }}</span></p>
+            <div class="w-full h-64 overflow-auto flex flex-col gap-2">
+                <template  v-for="payment in paymentList" :key="payment.id">
+                    <div class=" p-2 bg-gray-400 rounded-md">
+                        <p>Name: {{ payment.name }}</p>
+                        <p>Amount: ₱{{ payment.price }}</p>
+                        <p>Date: {{payment.lastPaymentDate ? new Date(payment.lastPaymentDate.toDate?.() || payment.lastPaymentDate).toLocaleDateString() : 'N/A' }}</p>
+        
+                    </div>
+                </template>
+            </div>
+            <div class=" w-full p-4 flex justify-end">
+                <button class=" px-4 py-2 bg-blue-500 text-white rounded-md" @click="paymentHistorySwitch = false">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class=" absolute z-100 w-full h-full top-0 left-0 flex items-center justify-center graybackground" id="overlay" v-show="makePaymentSwitch">
+        <div class="p-5 w-100 bg-white rounded-md shadow-md opacity-100">
+            <h3 class=" font-bold text-2xl">Make Payment</h3>
             <hr>
 
              <p>Payment: ₱{{ billsMonthly?.monthlyAmount ? (billsMonthly.monthlyAmount).toFixed(2) : '0.00' }}</p>
@@ -41,7 +64,7 @@
 
             <input type="text" placeholder="Enter Name" class=" border border-gray-300 rounded-md px-3 py-2 mb-4 mt-3 w-full" v-model="nameOfThePayment">
             <div class=" w-full p-4 flex justify-between">
-                <button class=" px-4 py-2 bg-red-500 text-white rounded-md" @click="closeOverlay">Close</button>
+                <button class=" px-4 py-2 bg-red-500 text-white rounded-md" @click="makePaymentSwitch = false">Close</button>
                 <button class=" px-4 py-2 bg-green-500 text-white rounded-md" @click="makePayment">Pay Now</button>
             </div>
         </div>
@@ -92,7 +115,7 @@
                 <p>Balance: ₱{{ reservedInfo && paymentInfo ? (reservedInfo.price - paymentInfo.totalPaid).toFixed(2) : '0.00' }}</p>
                 <p v-if="paymentInfo?.totalPaid != reservedInfo?.price">Latest Due Date: {{ paymentInfo?.latestDueDate ? new Date(paymentInfo.latestDueDate).toLocaleDateString() : 'N/A' }}</p>
                 <div class="w-full p-3 flex justify-between">
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm" @click="openPaymentModal">Make Payment</button>
+                    <button class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm" v-if="paymentInfo?.totalPaid && reservedInfo?.price && paymentInfo.totalPaid < reservedInfo.price" @click="openPaymentModal">Make Payment</button>
                     <button class="px-4 py-2 bg-violet-500 text-white rounded-md text-sm" @click="historyPayment">History</button>
                 </div>
                 
@@ -275,16 +298,21 @@ const CreateReservation = async() => {
 const billsMonthly: Ref<any> = ref(null);
 const openPaymentModal = async () => {
     // Implement your logic to open the payment modal here
-    paymentHistorySwitch.value = true;
+    makePaymentSwitch.value = true;
     billsMonthly.value = await BillingService.getMonthlyDues(selectedPlot.value?.id || '');
     closeOverlay();
 };
-
-const historyPayment = () => {
+const paymentList: Ref<any[]> = ref([]);
+const historyPayment = async () => {
     // Implement your logic to show payment history here
-    alert('Show Payment History');
+    paymentList.value =await PaymentService.getAllPayments(reservedInfo.value?.plotId || '');
+    console.log('Payment List for', reservedInfo.value?.plotId, ':', paymentList.value);
+    paymentHistorySwitch.value = true;
+    closeOverlay();
+
+    // alert('Show Payment History');
 };
-const paymentHistorySwitch: Ref<boolean> = ref(false);
+const makePaymentSwitch: Ref<boolean> = ref(false);
 
 const nameOfThePayment: Ref<string> = ref('');
 
@@ -298,13 +326,15 @@ const makePayment = async () => {
             billsMonthly.value?.monthlyAmount || 0
         );
         alert('Payment Successful');
-        paymentHistorySwitch.value = false;
+        makePaymentSwitch.value = false;
         refreshPlots();
     } catch (error) {
         console.error('Error processing payment:', error);
         alert('Payment Failed');
     }
 };
+
+const paymentHistorySwitch: Ref<boolean> = ref(false);
 </script>
 <style scoped>
 .graybackground {
