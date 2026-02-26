@@ -13,10 +13,13 @@
                 
             </nav>
             <div class=" bg-gray-50 h-full w-full">
-                <header class="w-full h-9 bg-white text-left flex items-center">
+                <header class="w-full h-1/15 bg-white text-left flex items-center">
                     <p class=" font-medium">Welcome, {{ user }}</p>
                 </header>
-                <RouterView />
+                <div class=" overflow-auto h-14/15">
+                    <RouterView />
+                </div>
+                
                 <!-- Dashboard content goes here -->
             </div>
         </div>

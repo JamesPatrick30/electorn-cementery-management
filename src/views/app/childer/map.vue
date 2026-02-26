@@ -26,8 +26,26 @@
                 </div>
             </div>
         </div>
+       
      </div>
+    <div class=" absolute z-100 w-full h-full top-0 left-0 flex items-center justify-center graybackground" id="overlay" v-show="paymentHistorySwitch">
+        <div class="p-5 w-100 bg-white rounded-md shadow-md opacity-100">
+            <h3 class=" font-bold text-2xl">Payment
+            </h3>
+            <hr>
 
+             <p>Payment: ₱{{ billsMonthly?.monthlyAmount ? (billsMonthly.monthlyAmount).toFixed(2) : '0.00' }}</p>
+            <p >Total Paid: <span class=" font-bold">₱{{ paymentInfo?.totalPaid || 0 }}</span></p>
+            <p >Balance: <span class=" font-bold">₱{{ reservedInfo && paymentInfo ? (reservedInfo.price - paymentInfo.totalPaid).toFixed(2) : '0.00' }}</span></p>
+            <p >Latest Due Date: <span class=" font-bold">{{ paymentInfo?.latestDueDate ? new Date(paymentInfo.latestDueDate).toLocaleDateString() : 'N/A' }}</span></p>
+
+            <input type="text" placeholder="Enter Name" class=" border border-gray-300 rounded-md px-3 py-2 mb-4 mt-3 w-full" v-model="nameOfThePayment">
+            <div class=" w-full p-4 flex justify-between">
+                <button class=" px-4 py-2 bg-red-500 text-white rounded-md" @click="closeOverlay">Close</button>
+                <button class=" px-4 py-2 bg-green-500 text-white rounded-md" @click="makePayment">Pay Now</button>
+            </div>
+        </div>
+    </div>
      <div class=" absolute z-100 w-full h-full top-0 left-0 flex items-center justify-center graybackground" id="overlay" v-show="openOverlayPlot">
         <div class=" bg-white p-5 rounded-md shadow-md opacity-100" v-if="selectedPlot?.status=='Available'">
             <header class=" bg-green-400 p-5 rounded-2xl mb-4">
@@ -55,7 +73,7 @@
             </div>
             <!-- <button class=" mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" @click="closeOverlay">Close</button> -->
         </div>
-        <div class=" bg-white p-5 rounded-md shadow-md opacity-100 w-70" v-else>
+        <div class=" bg-white p-5 rounded-md shadow-md opacity-100 w-110" v-else>
             <h2 class=" text-xl font-bold">Plot ID: {{ reservedInfo?.plotId }}</h2>
             <p class=" text-sm mb-4">Type: {{ reservedInfo?.plotType }}</p>
             <div class=" shadow-2xl p-5 rounded-lg bg-gray-300 mb-5">
@@ -73,6 +91,10 @@
                 <p>Total Paid: ₱{{ paymentInfo?.totalPaid || 0 }}</p>
                 <p>Balance: ₱{{ reservedInfo && paymentInfo ? (reservedInfo.price - paymentInfo.totalPaid).toFixed(2) : '0.00' }}</p>
                 <p v-if="paymentInfo?.totalPaid != reservedInfo?.price">Latest Due Date: {{ paymentInfo?.latestDueDate ? new Date(paymentInfo.latestDueDate).toLocaleDateString() : 'N/A' }}</p>
+                <div class="w-full p-3 flex justify-between">
+                    <button class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm" @click="openPaymentModal">Make Payment</button>
+                    <button class="px-4 py-2 bg-violet-500 text-white rounded-md text-sm" @click="historyPayment">History</button>
+                </div>
                 
             </div>
             <div class=" shadow-2xl p-5 rounded-lg bg-gray-300 mb-5">
@@ -249,6 +271,39 @@ const CreateReservation = async() => {
         return;
     }
     
+};
+const billsMonthly: Ref<any> = ref(null);
+const openPaymentModal = async () => {
+    // Implement your logic to open the payment modal here
+    paymentHistorySwitch.value = true;
+    billsMonthly.value = await BillingService.getMonthlyDues(selectedPlot.value?.id || '');
+    closeOverlay();
+};
+
+const historyPayment = () => {
+    // Implement your logic to show payment history here
+    alert('Show Payment History');
+};
+const paymentHistorySwitch: Ref<boolean> = ref(false);
+
+const nameOfThePayment: Ref<string> = ref('');
+
+const makePayment = async () => {
+    // console.log('Making payment for plot:', selectedPlot.value?.id);
+    if (!reservedInfo.value) return;
+    try {
+        await PaymentService.processPayment(
+            reservedInfo?.value.plotId,
+            nameOfThePayment.value,
+            billsMonthly.value?.monthlyAmount || 0
+        );
+        alert('Payment Successful');
+        paymentHistorySwitch.value = false;
+        refreshPlots();
+    } catch (error) {
+        console.error('Error processing payment:', error);
+        alert('Payment Failed');
+    }
 };
 </script>
 <style scoped>
