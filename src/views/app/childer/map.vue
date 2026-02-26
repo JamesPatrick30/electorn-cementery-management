@@ -55,10 +55,38 @@
             </div>
             <!-- <button class=" mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" @click="closeOverlay">Close</button> -->
         </div>
-        <div class=" bg-white p-5 rounded-md shadow-md opacity-100" v-else>
-            <h2 class=" text-xl font-bold mb-4">Plot</h2>
-            <p>Plot Name: {{ selectedPlot?.name }}</p>
-            <p>Status: {{ selectedPlot?.status }}</p>
+        <div class=" bg-white p-5 rounded-md shadow-md opacity-100 w-70" v-else>
+            <h2 class=" text-xl font-bold">Plot ID: {{ reservedInfo?.plotId }}</h2>
+            <p class=" text-sm mb-4">Type: {{ reservedInfo?.plotType }}</p>
+            <div class=" shadow-2xl p-5 rounded-lg bg-gray-300 mb-5">
+                <Strong class="font-bold">Owner Details</Strong>
+                <hr>
+                <p>User: {{ reservedInfo?.username }}</p>
+                <p>Contact: {{ reservedInfo?.contact }}</p>
+            </div>
+
+            <div class=" shadow-2xl p-5 rounded-lg bg-gray-300 mb-5">
+
+                <strong class="font-bold">Payment Status</strong>
+                <hr>
+                <p>Price: ₱{{ reservedInfo?.price || 0 }}</p>
+                <p>Total Paid: ₱{{ paymentInfo?.totalPaid || 0 }}</p>
+                <p>Balance: ₱{{ reservedInfo && paymentInfo ? (reservedInfo.price - paymentInfo.totalPaid).toFixed(2) : '0.00' }}</p>
+                <p v-if="paymentInfo?.totalPaid != reservedInfo?.price">Latest Due Date: {{ paymentInfo?.latestDueDate ? new Date(paymentInfo.latestDueDate).toLocaleDateString() : 'N/A' }}</p>
+                
+            </div>
+            <div class=" shadow-2xl p-5 rounded-lg bg-gray-300 mb-5">
+                <strong class="font-bold">Deceased List</strong>
+                <hr>
+                <div class=" h-20 overflow-auto">
+                    <div class=" p-3 bg-gray-400 m-1 rounded-2xl" v-for="value in deceasedList" :key="value.id">
+                        <p>Name: {{ value.name }}</p>
+                        <p>Date of Death: {{ value.dateOfDeath }}</p>
+                    </div>
+                </div>
+                
+                
+            </div>
             <button class=" mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" @click="closeOverlay">Close</button>
         </div>
 
@@ -72,6 +100,7 @@ import { ReserveService } from '../../../utils/ReserveService';
 import  { BillingService }  from '../../../utils/BillingService';
 import type { Timestamp } from 'firebase/firestore';
 import { PaymentService } from '../../../utils/PaymentService';
+import { DeceasedService } from '../../../utils/DeceasedService';
 type Plot = {
     id: string;
     name: string;
@@ -119,6 +148,12 @@ function loadPlots(){
         }
 }
 
+async function getPlotReservedInfo(plotId: string){
+    const reservedInfo = await ReserveService.getByPlotId(plotId);
+    console.log('Reserved Info for', plotId, ':', reservedInfo);
+    return reservedInfo;
+}
+
 function getPlotStatus(
     reservations: Reservation[],
     plotId: string
@@ -133,8 +168,22 @@ function getPlotStatus(
 }
 let selectedPlot: Ref<Plot | null> = ref(null);
 let openOverlayPlot: Ref<boolean> = ref(false);
-const openOverlay = (plot: Plot) => {
+type PaymentInfo = {
+    latestDueDate: Date | null;
+    totalPaid: number;
+} | null;
+const deceasedList: Ref<any> = ref(null);
+const paymentInfo: Ref<PaymentInfo> = ref(null);
+const reservedInfo: Ref<Reservation | null> = ref(null);
+const openOverlay = async (plot: Plot) => {
     selectedPlot.value = plot;
+    if(plot.status === 'Reserved' || plot.status === 'Occupied'){
+        reservedInfo.value = await getPlotReservedInfo(plot.id);
+        paymentInfo.value = await PaymentService.getPaymentSummary(plot.id);
+        deceasedList.value =await DeceasedService.getByPlot(plot.id) || null;
+        console.log('Deceased List for', plot.id, ':', deceasedList.value);
+        console.log('Payment Info for', plot.id, ':', paymentInfo.value);
+    }
     openOverlayPlot.value = true;
 };
 const closeOverlay = () => {
@@ -181,12 +230,18 @@ const CreateReservation = async() => {
             reservationValue.value,
             parseFloat(ReservationData.value.paymentPlan === 'installment' && ReservationData.value.price ? (ReservationData.value.price * 0.3).toFixed(2) : ReservationData.value.price?.toFixed(2) || '0.00')
         );
-
-        await PaymentService.processPayment(
-            reservationValue.value.plotId,
-            reservationValue.value.username,
-            reservationValue.value.price * 0.3,
-        );
+        ReservationData.value = {
+            name: '',
+            contact: '',
+            schedule: '',
+            price: null,
+            paymentPlan: ''
+        };
+        // await PaymentService.processPayment(
+        //     reservationValue.value.plotId,
+        //     reservationValue.value.username,
+        //     parseFloat(ReservationData.value.paymentPlan === 'installment' && ReservationData.value.price ? (ReservationData.value.price * 0.3).toFixed(2) : ReservationData.value.price?.toFixed(2) || '0.00'),
+        // );
         refreshPlots();
         closeOverlay();
     }catch(error){
