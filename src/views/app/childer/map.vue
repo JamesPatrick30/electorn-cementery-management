@@ -137,8 +137,12 @@
                     </div>
                 </div>
                 
-                
             </div>
+            <div class="w-full">
+                <button class="px-4 py-2 bg-red-500 text-white rounded-md" @click="confirmDeleteAll">Delete All</button>
+
+            </div>
+
             <button class=" mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" @click="closeOverlay">Close</button>
         </div>
 
@@ -178,7 +182,19 @@
               </div>
          </div>
      </div>
+    <!-- <div class=" w-full h-full absolute z-100 top-0 left-0 flex items-center justify-center graybackground" v-show="confirmDeleteAll">
+         <div class=" bg-white p-5 rounded-md shadow-md">
+            <h2 class=" text-xl font-bold mb-4">Confirm Delete</h2>
+            <hr>
+            <p>Are you sure you want to delete all deceased records for this plot?</p>
+            <div class="w-full flex justify-between mt-4">
+                <button class=" px-4 py-2 bg-gray-500 text-white rounded-md" @click="confirmDeleteAll = false">Cancel</button>
+                <button class=" px-4 py-2 bg-red-500 text-white rounded-md" @click="deleteDeceasedList">Delete All</button>
 
+            </div>
+        </div>
+            
+    </div> -->
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
@@ -301,6 +317,11 @@ const CreateReservation = async() => {
     if (CreaateReservationSwitch.value) return;
     CreaateReservationSwitch.value = true;
     if (!selectedPlot.value) return;
+    if (!ReservationData.value.name || !ReservationData.value.contact || !ReservationData.value.schedule || !ReservationData.value.price || !ReservationData.value.paymentPlan) {
+        // alert('Please fill in all the fields');
+        CreaateReservationSwitch.value = false;
+        return;
+    }
     try{
         await BillingService.createBillInfo(
             selectedPlot.value.id,
@@ -390,7 +411,7 @@ const deleteDeceased = async () => {
     if(!deceasedList.value) return;
     try {
         await DeceasedService.delete(editDeceasedId.value);
-        alert('Deceased person deleted successfully');
+        // alert('Deceased person deleted successfully');
     } catch (error) {
         console.error('Error deleting deceased person:', error);
     }
@@ -413,6 +434,10 @@ const saveDeceased = async () => {
     } catch (error) {
         console.error('Error saving deceased person:', error);
     }
+    newDeceasedData.value = {
+        name: '',
+        deathDate: '',
+    };
     AddDeceasedPopupSwitch.value = false;
     // alert('Deceased person added successfully');
 };
@@ -450,16 +475,35 @@ const makePayment = async () => {
             nameOfThePayment.value,
             billsMonthly.value?.monthlyAmount || 0
         );
-        alert('Payment Successful');
+        // alert('Payment Successful');
         makePaymentSwitch.value = false;
         refreshPlots();
     } catch (error) {
         console.error('Error processing payment:', error);
-        alert('Payment Failed');
+        // alert('Payment Failed');
     }
 };
 
 const paymentHistorySwitch: Ref<boolean> = ref(false);
+const deleteDeceasedList = async () => {
+    // Implement your logic to delete all deceased persons here
+    if(!reservedInfo.value || !reservedInfo.value.plotId) return;
+    try {
+        await ReserveService.purgePlotData(reservedInfo.value?.plotId || '');
+        // alert('All deceased persons deleted successfully');
+        refreshPlots();
+        closeOverlay();
+
+    } catch (error) {
+        console.error('Error deleting deceased persons:', error);
+    }
+    EditDeceasedPopupSwitch.value = false;
+};
+const confirmDeleteAll= () =>{
+    if(confirm("Are you sure you want to delete all deceased records for this plot?")){
+        deleteDeceasedList();
+    }
+}
 </script>
 <style scoped>
 .graybackground {

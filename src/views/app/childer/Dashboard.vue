@@ -46,7 +46,7 @@
 
             </div>
         </section>
-        <section class="w-full flex justify-center items-center mt-10" role="alert">
+        <!-- <section class="w-full flex justify-center items-center mt-10" role="alert">
             <div class="w-[90%] flex justify-between items-start">
                 <div class=" w-[67%] bg-white p-5 shadow-md rounded-lg h-70">
                  
@@ -70,7 +70,7 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> -->
     </div>
 </template>
 <script setup lang="ts">

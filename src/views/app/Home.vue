@@ -4,12 +4,12 @@
         
         <div class=" flex w-full h-full">
             <nav class=" bg-white h-full w-50 shadow-md p-5">
-                <p class=" mb-20 font-bold text-2xl">Cementery <br>Management</p>
-                <ul>
+                <p class="h-1/5 mb-20 font-bold text-2xl">Cementery <br>Management</p>
+                <ul class=" h-3/5 flex flex-col gap-5 text-lg">
                     <li :class="navInput == 'dashboard' ? 'active' : ''" @click="handleNav('dashboard')">Dashboard</li>
                     <li :class="navInput == 'map' ? 'active' : ''" @click="handleNav('map')">Map</li>
-                    <li :class="navInput == 'map' ? 'active' : ''" @click="handleLogout">logout</li>
                 </ul>
+                    <p class=" hover:underline cursor-pointer" @click="handleLogout">logout</p>
                 
             </nav>
             <div class=" bg-gray-50 h-full w-full">
