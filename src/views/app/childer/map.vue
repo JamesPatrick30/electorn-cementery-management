@@ -91,7 +91,7 @@
                 <p class=" font-bold">Monthly Payment: {{ ReservationData.price ? (ReservationData.price * 0.7 / (12 * 5)).toFixed(2) : '0.00' }}</p>
             </div>
             <div class=" flex justify-between w-full">
-                <button class=" mt-4 px-4 py-2 bg-green-500 text-white rounded-md" @click="CreateReservation">Reserve</button>
+                <button class=" mt-4 px-4 py-2 bg-green-500 text-white rounded-md" :class=" CreaateReservationSwitch === true? 'opacity-70': 'opacity-100'" @click="CreateReservation">Reserve</button>
                 <button class=" mt-4 px-4 py-2 bg-red-500 text-white rounded-md" @click="closeOverlay">Cancel</button>
             </div>
             <!-- <button class=" mt-4 px-4 py-2 bg-blue-500 text-white rounded-md" @click="closeOverlay">Close</button> -->
@@ -121,12 +121,19 @@
                 
             </div>
             <div class=" shadow-2xl p-5 rounded-lg bg-gray-300 mb-5">
-                <strong class="font-bold">Deceased List</strong>
+                <div class="flex justify-between">
+                    <strong class="font-bold">Deceased List</strong>
+                    <div class="flex gap-2">
+                        <button class="px-2 py-1 bg-green-500 text-white rounded-md text-sm" v-if="deceasedList?.length < 1 && reservedInfo?.plotType === 'single'" @click="openAddDeceased">Add</button>
+                        <button class="px-2 py-1 bg-green-500 text-white rounded-md text-sm" v-if="deceasedList?.length < 5 && reservedInfo?.plotType === 'monastery'" @click="openAddDeceased">Add</button>
+                        <!-- <button class="px-2 py-1 bg-yellow-500 text-white rounded-md text-sm" @click="openEditDeceased">Edit</button> -->
+                    </div>
+                </div>
                 <hr>
                 <div class=" h-20 overflow-auto">
-                    <div class=" p-3 bg-gray-400 m-1 rounded-2xl" v-for="value in deceasedList" :key="value.id">
+                    <div class=" p-3 bg-gray-400 m-1 rounded-2xl hover:bg-gray-500 cursor-pointer" v-for="value in deceasedList" :key="value.id" @click="openEditDeceased(value)">
                         <p>Name: {{ value.name }}</p>
-                        <p>Date of Death: {{ value.dateOfDeath }}</p>
+                        <p>Date of Death: {{ value.deathDate }}</p>
                     </div>
                 </div>
                 
@@ -136,14 +143,52 @@
         </div>
 
      </div>
+     <div class=" w-full h-full absolute z-100 top-0 left-0 flex items-center justify-center graybackground" v-show="AddDeceasedPopupSwitch">
+         <div class=" bg-white p-5 rounded-md shadow-md">
+             <h2 class=" text-xl font-bold mb-4">Add Deceased</h2>
+             <hr>
+                <input type="text" placeholder="Enter Name" class=" border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" v-model="newDeceasedData.name">
+                <input type="date" name="schedule" id="schedule" class=" border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" v-model="newDeceasedData.deathDate">
+
+             <!-- Add Deceased Form -->
+              <div class="w-full flex justify-between">
+                 <button class=" mt-4 px-4 py-2 bg-red-500 text-white rounded-md" @click="AddDeceasedPopupSwitch = false">Close</button>
+                 <button class=" mt-4 px-4 py-2 bg-green-500 text-white rounded-md" @click="saveDeceased">Save</button>
+                 
+
+              </div>
+         </div>
+     </div>
+    <div class=" w-full h-full absolute z-100 top-0 left-0 flex items-center justify-center graybackground" v-show="EditDeceasedPopupSwitch">
+         <div class=" bg-white p-5 rounded-md shadow-md">
+             <h2 class=" text-xl font-bold mb-4">Edit Deceased</h2>
+             <hr>
+             <!-- Edit Deceased Form -->
+              <input type="text" placeholder="Enter Name" class=" border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" v-model="editDeceasedData.name">
+            <input type="date" name="schedule" id="schedule" class=" border border-gray-300 rounded-md px-3 py-2 mb-4 w-full" v-model="editDeceasedData.deathDate">
+
+              <div class="w-full flex justify-between">
+                 <button class=" mt-4 px-4 py-2 bg-red-500 text-white rounded-md" @click="EditDeceasedPopupSwitch = false">Close</button>
+                 <div class="flex gap-2">
+                     <button class=" mt-4 px-4 py-2 bg-red-500 text-white rounded-md" @click="deleteDeceased">Delete</button>
+
+                     <button class=" mt-4 px-4 py-2 bg-green-500 text-white rounded-md" @click="saveUpdatedDeceased">Save</button>
+
+                 </div>
+              </div>
+         </div>
+     </div>
+
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Ref } from 'vue';
 import type { Reservation } from '../../../types/Reservation'; // Import your interface
+import type { Deceased } from '../../../types/Cemetery';
 import { ReserveService } from '../../../utils/ReserveService';
 import  { BillingService }  from '../../../utils/BillingService';
 import type { Timestamp } from 'firebase/firestore';
+import { serverTimestamp } from 'firebase/firestore';
 import { PaymentService } from '../../../utils/PaymentService';
 import { DeceasedService } from '../../../utils/DeceasedService';
 type Plot = {
@@ -251,8 +296,10 @@ const ReservationData: Ref<ReservationType> = ref({
     price: null,
     paymentPlan: ''
 });
-
+const CreaateReservationSwitch: Ref<boolean> = ref(false);
 const CreateReservation = async() => {
+    if (CreaateReservationSwitch.value) return;
+    CreaateReservationSwitch.value = true;
     if (!selectedPlot.value) return;
     try{
         await BillingService.createBillInfo(
@@ -282,6 +329,7 @@ const CreateReservation = async() => {
             price: null,
             paymentPlan: ''
         };
+        CreaateReservationSwitch.value = false;
         // await PaymentService.processPayment(
         //     reservationValue.value.plotId,
         //     reservationValue.value.username,
@@ -300,6 +348,83 @@ const openPaymentModal = async () => {
     // Implement your logic to open the payment modal here
     makePaymentSwitch.value = true;
     billsMonthly.value = await BillingService.getMonthlyDues(selectedPlot.value?.id || '');
+    closeOverlay();
+};
+type DeceasedType = {
+    name: string;
+    deathDate: string;
+}
+const editDeceasedData: Ref<DeceasedType> = ref({
+    name: '',
+    deathDate: '',
+});
+const newDeceasedData: Ref<DeceasedType> = ref({
+    name: '',
+    deathDate: '',
+});
+const AddDeceasedPopupSwitch: Ref<boolean> = ref(false);
+const EditDeceasedPopupSwitch: Ref<boolean> = ref(false);
+const openAddDeceased = async () => {
+    // Implement your logic to add a deceased person here
+    AddDeceasedPopupSwitch.value = true;
+    closeOverlay();
+};
+const saveUpdatedDeceased = async () => {
+    // Implement your logic to save the edited deceased person details here
+    // For example, you can call DeceasedService to update the data
+    try {
+        await DeceasedService.update(editDeceasedId.value, {
+            name: editDeceasedData.value.name,
+            deathDate: editDeceasedData.value.deathDate,
+        });
+        // alert('Deceased person details updated successfully');
+        EditDeceasedPopupSwitch.value = false;
+
+    } catch (error) {
+        console.error('Error updating deceased person:', error);
+    }
+    // alert('Deceased person details updated successfully');
+};
+const deleteDeceased = async () => {
+    // Implement your logic to delete a deceased person here
+    if(!deceasedList.value) return;
+    try {
+        await DeceasedService.delete(editDeceasedId.value);
+        alert('Deceased person deleted successfully');
+    } catch (error) {
+        console.error('Error deleting deceased person:', error);
+    }
+    EditDeceasedPopupSwitch.value = false;
+};
+const saveDeceased = async () => {
+    // Implement your logic to save the new deceased person here
+    // For example, you can call DeceasedService to save the data
+    if (!reservedInfo.value) return;
+    const newDeceased: Deceased = {
+        id: '', // This will be generated by Firestore
+        name: newDeceasedData.value.name,
+        deathDate: newDeceasedData.value.deathDate,
+        plotId: reservedInfo.value?.plotId || '',
+        addedAt: serverTimestamp() as Timestamp,
+        // notes: ''
+    };
+    try {
+        await DeceasedService.addDeceased(newDeceased);
+    } catch (error) {
+        console.error('Error saving deceased person:', error);
+    }
+    AddDeceasedPopupSwitch.value = false;
+    // alert('Deceased person added successfully');
+};
+const editDeceasedId: Ref<string> = ref('');
+const openEditDeceased = async (data: any) => {
+    // Implement your logic to edit deceased person details here
+    editDeceasedId.value = data.id;
+    editDeceasedData.value = {
+        name: data.name,
+        deathDate: data.deathDate,
+    };
+    EditDeceasedPopupSwitch.value = true;
     closeOverlay();
 };
 const paymentList: Ref<any[]> = ref([]);

@@ -48,6 +48,6 @@ const handleNav = (routeName: string) => {
     // alert('Navigated to ' + routeName);
 };
 onMounted(() => {
-    alert('Welcome ' + user);
+    // alert('Welcome ' + user);
 });
 </script>

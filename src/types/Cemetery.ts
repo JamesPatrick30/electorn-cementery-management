@@ -1,12 +1,12 @@
+import type { Timestamp } from "firebase/firestore";
+
 export interface Deceased {
   id: string;          // Firestore Document ID
   plotId: string;      // Foreign key to the Plot
-  firstName: string;
-  lastName: string;
-  dateOfBirth?: string;
-  dateOfDeath: string;
-  intermentDate: string;
-  notes?: string;
+  name: string;
+  deathDate: string;
+  addedAt: Timestamp;       // Timestamp when the record was created
+  // notes?: string;
 }
 
 export interface Plot {

@@ -1,7 +1,7 @@
 import { db } from "../firebaseConfig";
 import { 
   collection, doc, getDocs, query, where, 
-  updateDoc, deleteDoc, setDoc 
+  updateDoc, deleteDoc, setDoc, serverTimestamp 
 } from "firebase/firestore";
 import type { Deceased } from "../types/Cemetery";
 
@@ -33,8 +33,8 @@ export const DeceasedService = {
     const newDocRef = doc(collection(db, DECEASED_COLLECTION));
     const id = newDocRef.id;
 
-    // Save deceased record
-    await setDoc(newDocRef, { ...deceasedData, id });
+    // Save deceased record with server timestamp
+    await setDoc(newDocRef, { ...deceasedData, id, addedAt: serverTimestamp() });
 
     // Business Logic: You might want to automatically update the Plot status here
     // await PlotService.updateStatus(deceasedData.plotId, 'occupied');
